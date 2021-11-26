@@ -1,5 +1,6 @@
 from flask import Flask, request
 from database import Database
+import json
 app = Flask(__name__)
 db = Database()
 
@@ -25,21 +26,38 @@ def square(number):
 
 
 #Users Functionality
-@app.route("/users", methods=['POST', 'GET'])
+@app.route("/users", methods=['POST', 'GET', 'PUT'])
 def users():
 
     #Get method
     if request.method == 'GET':
-        user = db.get_user_by_id(0)
+        id = request.json["id"]
+        user = db.get_user_by_id(id)
         data = {"first_name": user.first_name, "last_name": user.last_name}
-        return data
+        return json.dumps(data)
 
     #POST method for
     if request.method == 'POST':
         first_name = request.json["first_name"]
         last_name = request.json["last_name"]
-        db.add_user(first_name, last_name)
-        return "<p>new_user_added" + first_name + " " + last_name + "</p>"
+        user_id = db.add_user(first_name, last_name)
+        response = {"id" : user_id,
+                    "first_name" : first_name,
+                    "last_name" : last_name}
+        return json.dumps(response)
+
+    # PUT method for
+    if request.method == 'PUT':
+        id = request.json["id"]
+        first_name = request.json["first_name"]
+        last_name = request.json["last_name"]
+        response = db.update_user(id, first_name, last_name)
+        if response == True:
+            value = {"response" : "updated"}
+            return json.dumps(value)
+        value = {"response": "failed"}
+        return json.dumps(value)
+
 
 if __name__ == '__main__':
     app.run()
