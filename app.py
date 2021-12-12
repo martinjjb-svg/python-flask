@@ -1,6 +1,7 @@
 from flask import Flask, request
 from database import Database, Bookshop  # Added import of Bookshop
 import json
+import service
 app = Flask(__name__)
 db = Database()
 bs = Bookshop()  # Definition for Bookshop
@@ -70,39 +71,28 @@ def books():
         info = request.json["info"]
 
         if type == "title":
-            book = bs.get_book_by_title(info)  #  applies get_book_by_title method to bookshop datatbase
-            data = {"title": book.title, "author": book.author, "category": book.category,
-                    "date": book.date, "price": book.price}  # specifies the data to include in respect of book
-            return json.dumps(data, indent=2)  #  returns data in json format
-
+            return service.get_book_by_title(info)  #  applies get_book_by_title method to bookshop datatbase
 
         if type == "author":
-            book = bs.get_book_by_author(info)
-            data = {"title": book.title, "author": book.author, "category": book.category, "date": book.date, "price": book.price}
-            return json.dumps(data)
+            return service.get_book_by_author(info)
+
+        if type == "category":
+            return service.get_book_by_category(info)
 
         if type == "date":
-            book = bs.get_book_by_date(info)
-            data = {"title": book.title, "author": book.author, "category": book.category, "date": book.date, "price": book.price}
-            return json.dumps(data)
+            return service.get_book_by_date(info)
 
+        if type == "price":
+            return service.get_book_by_price_lower_than(info)
 
     # POST method for
     if request.method == 'POST':
-        title = request.json["title"]  #  creates name equal to the value input next to the title key in json
+        title = request.json["title"]  # creates name equal to the value input next to the title key in json
         author = request.json["author"]
         category = request.json["category"]
         date = request.json["date"]
         price = request.json["price"]
-        book_id = bs.add_book(title, author, category, date, price)  #  adds information to bookshop database
-        response = {"id": book_id,  #  sets out the new record of information
-                    "title": title,
-                    "author": author,
-                    "category": category,
-                    "date": date,
-                    "price": price
-                    }
-        return json.dumps(response)  # returns the data
+        return service.add_book(title, author, category, date, price)  # adds information to bookshop database
 
     # PUT method for
     if request.method == 'PUT':
@@ -112,13 +102,7 @@ def books():
         category = request.json["category"]
         date = request.json["date"]
         price = request.json["price"]
-        response = bs.update_book(id, title, author, category, date, price)  # applies update method
-        if response == True:
-            value = {"response": "updated"}
-            return json.dumps(value)  #  returns in json form the information in value
-        value = {"response": "failed"}
-        return json.dumps(value)
-
+        return service.update_book(id, title, author, category, date, price)  # applies update method
 
 
 if __name__ == '__main__':
