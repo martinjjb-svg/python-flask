@@ -1,10 +1,8 @@
-from flask import Flask, request
-from database import Database, Bookshop  # Added import of Bookshop
+from flask import Flask, request, jsonify, make_response
+from database import Database # Added import of Bookshop
 import json
 import service
 app = Flask(__name__)
-db = Database()
-bs = Bookshop()  # Definition for Bookshop
 
 
 # GET function: Runs the hello world on local host
@@ -33,32 +31,33 @@ def users():
 
     # Get method
     if request.method == 'GET':
-        id = request.json["id"]
-        user = db.get_user_by_id(id)
-        data = {"first_name": user.first_name, "last_name": user.last_name}
-        return json.dumps(data)
+        type = request.json["type"]
+        info = request.json["info"]
+
+        if type == "id":
+            return service.get_user_by_id(info)
+
+        if type == "First name":
+            return service.get_user_by_first_name(info)
+
+        if type == "Surname":
+            if len(info) < 1:
+                return make_response(jsonify(message="Name must be more than 1 letter",
+                                     category="failed"), 404)
+            return service.get_user_by_last_name(info)
 
     # POST method for
     if request.method == 'POST':
         first_name = request.json["first_name"]
         last_name = request.json["last_name"]
-        user_id = db.add_user(first_name, last_name)
-        response = {"id" : user_id,
-                    "first_name" : first_name,
-                    "last_name" : last_name}
-        return json.dumps(response)
+        return service.add_user(first_name, last_name)
 
     # PUT method for
     if request.method == 'PUT':
         id = request.json["id"]
         first_name = request.json["first_name"]
         last_name = request.json["last_name"]
-        response = db.update_user(id, first_name, last_name)
-        if response == True:
-            value = {"response" : "updated"}
-            return json.dumps(value)
-        value = {"response": "failed"}
-        return json.dumps(value)
+        return service.update_user(id, first_name, last_name)
 
 
 # Lesson 3 Books Functionality
@@ -71,7 +70,7 @@ def books():
         info = request.json["info"]
 
         if type == "title":
-            return service.get_book_by_title(info)  #  applies get_book_by_title method to bookshop datatbase
+            return service.get_book_by_title(info)  # applies get_book_by_title method to bookshop datatbase
 
         if type == "author":
             return service.get_book_by_author(info)
@@ -84,6 +83,9 @@ def books():
 
         if type == "price":
             return service.get_book_by_price_lower_than(info)
+
+        if type == "all":
+            return service.get_all()
 
     # POST method for
     if request.method == 'POST':
