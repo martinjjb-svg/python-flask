@@ -43,7 +43,7 @@ def users():
         if type == "Surname":
             if len(info) < 1:
                 return make_response(jsonify(message="Name must be more than 1 letter",
-                                     category="failed"), 404)
+                                     category="failed"), 406)
             return service.get_user_by_last_name(info)
 
     # POST method for
